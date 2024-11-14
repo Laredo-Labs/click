@@ -229,6 +229,40 @@ class NoSuchOption(UsageError):
         return f"{self.message} {suggest}"
 
 
+class NoSuchCommand(UsageError):
+    """Raised if click attempted to handle a command that does not
+    exist.
+
+    .. versionadded:: 8.1
+    """
+
+    def __init__(
+        self,
+        command_name: str,
+        message: str | None = None,
+        possibilities: cabc.Sequence[str] | None = None,
+        ctx: Context | None = None,
+    ) -> None:
+        if message is None:
+            message = _("No such command {name!r}.").format(name=command_name)
+
+        super().__init__(message, ctx)
+        self.command_name = command_name
+        self.possibilities = possibilities
+
+    def format_message(self) -> str:
+        if not self.possibilities:
+            return self.message
+
+        possibility_str = ", ".join(sorted(self.possibilities))
+        suggest = ngettext(
+            "Did you mean {possibility}?",
+            "(Possible commands: {possibilities})",
+            len(self.possibilities),
+        ).format(possibility=possibility_str, possibilities=possibility_str)
+        return f"{self.message} {suggest}"
+
+
 class BadOptionUsage(UsageError):
     """Raised if an option is generally supplied but the use of the option
     was incorrect.  This is for instance raised if the number of arguments

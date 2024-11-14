@@ -41,6 +41,26 @@ def test_other_command_forward(runner):
     assert result.output == "Count: 1\nCount: 42\n"
 
 
+def test_command_suggestion(runner):
+    cli = click.Group()
+
+    @cli.command()
+    def command():
+        pass
+
+    @cli.command()
+    def commando():
+        pass
+
+    result = runner.invoke(cli, ["commnd"])
+    assert "No such command 'commnd'" in result.output
+    assert "Did you mean command?" in result.output
+
+    result = runner.invoke(cli, ["commandx"])
+    assert "No such command 'commandx'" in result.output
+    assert "(Possible commands: command, commando)" in result.output
+
+
 def test_forwarded_params_consistency(runner):
     cli = click.Group()
 

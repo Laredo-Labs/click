@@ -19,10 +19,12 @@ from types import TracebackType
 
 from . import types
 from .exceptions import Abort
-from .exceptions import BadParameter
 from .exceptions import ClickException
+from .exceptions import BadArgumentUsage
+from .exceptions import BadParameter
 from .exceptions import Exit
 from .exceptions import MissingParameter
+from .exceptions import NoSuchCommand
 from .exceptions import UsageError
 from .formatting import HelpFormatter
 from .formatting import join_options
@@ -1829,7 +1831,14 @@ class Group(Command):
         if cmd is None and not ctx.resilient_parsing:
             if _split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
-            ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
+
+            possibilities = [name for name, _ in _complete_visible_commands(ctx, original_cmd_name)]
+            raise NoSuchCommand(
+                command_name=original_cmd_name,
+                possibilities=possibilities,
+                ctx=ctx,
+            )
+
         return cmd_name if cmd else None, cmd, args[1:]
 
     def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
